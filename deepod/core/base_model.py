@@ -11,7 +11,7 @@ import random
 import time
 from abc import ABCMeta, abstractmethod
 from scipy.stats import binom
-from deepod.utils.utility import get_sub_seqs, get_sub_seqs_label
+from deepod.utils import get_sub_seqs, get_sub_seqs_label
 from deepod.core.base_networks import sequential_net_name
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted

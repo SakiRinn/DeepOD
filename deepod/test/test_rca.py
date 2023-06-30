@@ -21,7 +21,7 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from deepod.models.rca import RCA
-from deepod.utils.data import generate_data
+from deepod.utils import generate_data
 
 
 class TestRCA(unittest.TestCase):

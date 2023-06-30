@@ -22,8 +22,8 @@ import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from deepod.models.dsvdd import DeepSVDD
-from deepod.utils.data import generate_data
-from deepod.utils.utility import cal_metrics
+from deepod.utils import generate_data
+from deepod.utils import cal_metrics
 
 
 class TestDeepSVDD(unittest.TestCase):

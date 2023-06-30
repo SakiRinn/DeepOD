@@ -1,9 +1,6 @@
-from operator import is_
 import numpy as np
-import torch
+from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import Dataset
-from typing import OrderedDict
-import torch.nn.functional as F
 
 
 class BaseDataset(Dataset):
@@ -23,15 +20,11 @@ class BaseDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx], self.gts[idx]
 
-    @staticmethod
-    def label_encoding(array):
-        ordered_set = list(OrderedDict.fromkeys(array).keys())
-        encoding_map = {elem: idx for idx, elem in enumerate(ordered_set)}
-        label = np.zeros(array.shape, dtype=np.int32)
-        for k, v in encoding_map.items():
-            label[array == k] = v
-        new_array = F.one_hot(torch.tensor(label).type(torch.long)).numpy()
-        return encoding_map, new_array
+    @property
+    def binary_gts(self):
+        new_gts = self.gts
+        new_gts[new_gts != 0] = 1
+        return new_gts
 
     def split(self, is_training, is_shuffle=False):
         if is_training is None:
@@ -53,3 +46,18 @@ class BaseDataset(Dataset):
             else:
                 self.data = self.data[split_idx:]
                 self.gts = self.gts[split_idx:]
+
+    def normalize(self, method='scale'):
+        if method == 'min-max':
+            minmax_scaler = MinMaxScaler()
+            minmax_scaler.fit(self.data)
+            self.data = minmax_scaler.transform(self.data)
+        elif method == 'z-score':
+            mus = np.mean(self.data, axis=0)
+            sds = np.std(self.data, axis=0)
+            sds[sds == 0] = 1
+            self.data = np.array([(xx - mus) / sds for xx in self.data])
+        elif method == 'scale':
+            self.data /= 255.
+        else:
+            raise NotImplementedError

@@ -5,11 +5,13 @@
 # Author: Yahya Almardeny <almardeny@gmail.com>
 # License: BSD 2 clause
 
-from warnings import warn
-from sklearn.utils import check_X_y
+from typing import OrderedDict
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import check_random_state
-from sklearn.utils import check_consistent_length
 import numpy as np
+import torch
+from tqdm import tqdm
+import torch.nn.functional as F
 
 
 def _generate_data(n_inliers, n_outliers, n_features, coef, offset,
@@ -70,7 +72,6 @@ def _generate_data(n_inliers, n_outliers, n_features, coef, offset,
         y = np.r_[y, np.full((n_inf), np.infty)]
 
     return X, y
-
 
 
 def generate_data(n_train=1000, n_test=500, n_features=2, contamination=0.1,
@@ -155,3 +156,87 @@ def generate_data(n_train=1000, n_test=500, n_features=2, contamination=0.1,
 
     return X_train, X_test, y_train, y_test
 
+
+def add_irrelevant_features(x, ratio, seed=None):
+    n_samples, n_f = x.shape
+    size = int(ratio * n_f)
+
+    irr_new = np.zeros([n_samples, size])
+    np.random.seed(seed)
+    for i in tqdm(range(size)):
+        irr_new[:, i] = np.random.rand(n_samples)
+
+    # irr_new = np.zeros([n_samples, size])
+    # np.random.seed(seed)
+    # for i in range(size):
+    #     array = x[:, np.random.choice(x.shape[1], 1)]
+    #     new_array = array[np.random.permutation(n_samples)].flatten()
+    #     irr_new[:, i] = new_array
+
+    x_new = np.hstack([x, irr_new])
+
+    return x_new
+
+
+def adjust_contamination(x, y, contamination_r, swap_ratio=0.05, random_state=42):
+    """
+    add/remove anomalies in training data to replicate anomaly contaminated data sets.
+    randomly swap 5% features of two anomalies to avoid duplicate contaminated anomalies.
+    """
+    rng = np.random.RandomState(random_state)
+
+    anom_idx = np.where(y == 1)[0]
+    norm_idx = np.where(y == 0)[0]
+    n_cur_anom = len(anom_idx)
+    n_adj_anom = int(len(norm_idx) * contamination_r / (1. - contamination_r))
+
+    # x_train = np.delete(x_train, unknown_anom_idx, axis=0)
+    # y_train = np.delete(y_train, unknown_anom_idx, axis=0)
+    # noises = inject_noise(true_anoms, n_adj_noise, 42)
+    # x_train = np.append(x_train, noises, axis=0)
+    # y_train = np.append(y_train, np.zeros((noises.shape[0], 1)))
+
+    # inject noise
+    if n_cur_anom < n_adj_anom:
+        n_inj_noise = n_adj_anom - n_cur_anom
+        print(f'Control Contamination Rate: injecting [{n_inj_noise}] Noisy samples')
+
+        seed_anomalies = x[anom_idx]
+
+        n_sample, dim = seed_anomalies.shape
+        n_swap_feat = int(swap_ratio * dim)
+        inj_noise = np.empty((n_inj_noise, dim))
+        for i in np.arange(n_inj_noise):
+            idx = rng.choice(n_sample, 2, replace=False)
+            o1 = seed_anomalies[idx[0]]
+            o2 = seed_anomalies[idx[1]]
+            swap_feats = rng.choice(dim, n_swap_feat, replace=False)
+            inj_noise[i] = o1.copy()
+            inj_noise[i, swap_feats] = o2[swap_feats]
+
+        x = np.append(x, inj_noise, axis=0)
+        y = np.append(y, np.ones(n_inj_noise))
+
+    # remove noise
+    elif n_cur_anom > n_adj_anom:
+        n_remove = n_cur_anom - n_adj_anom
+        print(f'Control Contamination Rate: Removing [{n_remove}] Noise')
+
+        remove_id = anom_idx[rng.choice(n_cur_anom, n_remove, replace=False)]
+        print(x.shape)
+
+        x = np.delete(x, remove_id, 0)
+        y = np.delete(y, remove_id, 0)
+        print(x.shape)
+
+    return x, y
+
+
+def label_encoding(array):
+        ordered_set = list(OrderedDict.fromkeys(array).keys())
+        encoding_map = {elem: idx for idx, elem in enumerate(ordered_set)}
+        label = np.zeros(array.shape, dtype=np.int32)
+        for k, v in encoding_map.items():
+            label[array == k] = v
+        new_array = F.one_hot(torch.tensor(label).type(torch.long)).numpy()
+        return encoding_map, new_array

@@ -1,4 +1,4 @@
-from deepod.data.base import BaseDataset
-from deepod.data.kdd import KDD
+from .base import BaseDataset
+from .kdd import KDD
 
 __all__ = ['BaseDataset', 'KDD']

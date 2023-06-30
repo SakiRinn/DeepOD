@@ -3,11 +3,12 @@ import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
 from deepod.data.base import BaseDataset
+import deepod.utils as utils
 
 
 class KDD(BaseDataset):
 
-    def __init__(self, path, is_training=None, is_shuffle=False):
+    def __init__(self, path, is_training=None, is_shuffle=False, normalize=None):
         """Support KDD Cup'99 and NSL-KDD dataset.
 
         Args:
@@ -60,6 +61,7 @@ class KDD(BaseDataset):
             "dst_host_srv_rerror_rate",
             "label",
         ]
+
         table = pd.read_table(path, header=None, sep=",", on_bad_lines="warn")
         data = np.concatenate(
             [table.values[:, 0][..., np.newaxis], table.values[:, 4:41]], axis=1
@@ -69,13 +71,13 @@ class KDD(BaseDataset):
             self.difficulty = table.values[:, 42]
 
         # Protocol Type
-        self.protocol, protocols = self.label_encoding(table.values[:, 1])
+        self.protocol, protocols = utils.label_encoding(table.values[:, 1])
         data = np.concatenate([data, protocols], axis=1)
         # Service
-        self.service, services = self.label_encoding(table.values[:, 2])
+        self.service, services = utils.label_encoding(table.values[:, 2])
         data = np.concatenate([data, services], axis=1)
         # Flag
-        self.flag, flags = self.label_encoding(table.values[:, 3])
+        self.flag, flags = utils.label_encoding(table.values[:, 3])
         data = np.concatenate([data, flags], axis=1)
         # GT
         original_gts = np.vectorize(lambda s: s.strip(". "))(table.values[:, 41])
@@ -87,9 +89,5 @@ class KDD(BaseDataset):
 
         super(KDD, self).__init__(data.astype(np.float32), gts)
         self.split(is_training, is_shuffle)
-
-
-if __name__ == "__main__":
-    kddcup99 = KDD("data/kddcup.data.txt")
-    dl = DataLoader(kddcup99, batch_size=512, shuffle=True, num_workers=0)
-    print(kddcup99.data.shape)
+        if normalize is not None:
+            self.normalize(normalize)

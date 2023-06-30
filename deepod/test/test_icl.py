@@ -21,7 +21,7 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from deepod.models.icl import ICL
-from deepod.utils.data import generate_data
+from deepod.utils import generate_data
 
 
 class TestICL(unittest.TestCase):

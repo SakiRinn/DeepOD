@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import IsolationForest
 from deepod.core.base_model import BaseDeepAD
 from deepod.core.base_networks import get_network
-from deepod.utils.utility import get_sub_seqs
+from deepod.utils import get_sub_seqs
 from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader

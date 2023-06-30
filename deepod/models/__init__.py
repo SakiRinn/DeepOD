@@ -6,7 +6,6 @@ from .prenet import PReNet
 from .feawad import FeaWAD
 from .repen import REPEN
 from .goad import GOAD
-from .rca import RCA
 from .rdp import RDP
 from .icl import ICL
 from .slad import SLAD

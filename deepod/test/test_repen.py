@@ -21,8 +21,8 @@ import torch
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from deepod.models.repen import REPEN
-from deepod.utils.data import generate_data
-from deepod.utils.utility import cal_metrics
+from deepod.utils import generate_data
+from deepod.utils import cal_metrics
 
 
 class TestREPEN(unittest.TestCase):
