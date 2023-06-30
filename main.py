@@ -121,9 +121,9 @@ def main():
 
         with open(result_file, "a") as f:
             txt = (
-                f"{args.dataset}\t\t{auc_lst[i]:.4f}\t\tNull\t\t"
-                f"{ap_lst[i]:.4f}\t\tNull\t\t{f1_lst[i]:.4f}\t\tNull\t\t"
-                f"{avg_time1:.1f}/{avg_time2:.1f}"
+                f"{args.dataset:4}\t\t{auc_lst[i]:.4f}\t\tNull\t"
+                f"{ap_lst[i]:.4f}\t\tNull\t{f1_lst[i]:.4f}\tNull\t"
+                f"{t1_lst[i]:.1f}/{t2_lst[i]:.1f}"
             )
             print(txt)
             print(txt, file=f)
@@ -139,8 +139,8 @@ def main():
 
     with open(result_file, "a") as f:
         txt = (
-            f"{args.dataset}\t\t{avg_auc:.4f}\t\t{std_auc:.4f}\t\t"
-            f"{avg_ap:.4f}\t\t{std_ap:.4f}\t\t{avg_f1:.4f}\t\t{std_f1:.4f}\t\t"
+            f"{args.dataset:4}\t\t{avg_auc:.4f}\t\t{std_auc:.4f}\t"
+            f"{avg_ap:.4f}\t\t{std_ap:.4f}\t{avg_f1:.4f}\t{std_f1:.4f}\t"
             f"{avg_time1:.1f}/{avg_time2:.1f}"
         )
         print(txt, file=f)
