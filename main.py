@@ -1,6 +1,9 @@
 import argparse
 import os
 import time
+
+from torch.nn.modules import normalization
+from deepod.data import KDD
 import numpy as np
 
 import deepod.utils as utils
@@ -152,4 +155,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    kdd = KDD("./data/nslkdd.txt", normalize="z-score")
+    print(kdd.data)

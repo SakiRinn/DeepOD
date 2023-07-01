@@ -5,13 +5,9 @@
 # Author: Yahya Almardeny <almardeny@gmail.com>
 # License: BSD 2 clause
 
-from typing import OrderedDict
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import check_random_state
 import numpy as np
-import torch
 from tqdm import tqdm
-import torch.nn.functional as F
 
 
 def _generate_data(n_inliers, n_outliers, n_features, coef, offset,
@@ -230,13 +226,3 @@ def adjust_contamination(x, y, contamination_r, swap_ratio=0.05, random_state=42
         print(x.shape)
 
     return x, y
-
-
-def label_encoding(array):
-        ordered_set = list(OrderedDict.fromkeys(array).keys())
-        encoding_map = {elem: idx for idx, elem in enumerate(ordered_set)}
-        label = np.zeros(array.shape, dtype=np.int32)
-        for k, v in encoding_map.items():
-            label[array == k] = v
-        new_array = F.one_hot(torch.tensor(label).type(torch.long)).numpy()
-        return encoding_map, new_array

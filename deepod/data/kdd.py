@@ -1,13 +1,11 @@
 from typing import OrderedDict
 import pandas as pd
 import numpy as np
-from torch.utils.data import DataLoader
 from deepod.data.base import BaseDataset
 import deepod.utils as utils
 
 
 class KDD(BaseDataset):
-
     def __init__(self, path, is_training=None, is_shuffle=False, normalize=None):
         """Support KDD Cup'99 and NSL-KDD dataset.
 
@@ -19,27 +17,27 @@ class KDD(BaseDataset):
         """
         self.features = [
             "duration",
-            "protocol_type",
-            "service",
-            "flag",
+            "protocol_type",  # Discrete
+            "service",  # Discrete
+            "flag",  # Discrete
             "src_bytes",
             "dst_bytes",
-            "land",
+            "land",  # Discrete (0/1)
             "wrong_fragment",
             "urgent",
             "hot",
             "num_failed_logins",
-            "logged_in",
+            "logged_in",  # Discrete (0/1)
             "num_compromised",
-            "root_shell",
-            "su_attempted",
+            "root_shell",  # Discrete (0/1)
+            "su_attempted",  # Discrete (0/1)
             "num_root",
             "num_file_creations",
             "num_shells",
             "num_access_files",
             "num_outbound_cmds",
-            "is_host_login",
-            "is_guest_login",
+            "is_host_login",  # Discrete (0/1)
+            "is_guest_login",  # Discrete (0/1)
             "count",
             "srv_count",
             "serror_rate",
@@ -59,16 +57,17 @@ class KDD(BaseDataset):
             "dst_host_srv_serror_rate",
             "dst_host_rerror_rate",
             "dst_host_srv_rerror_rate",
-            "label",
+            "label",  # Discrete (GT)
         ]
-
         table = pd.read_table(path, header=None, sep=",", on_bad_lines="warn")
-        data = np.concatenate(
-            [table.values[:, 0][..., np.newaxis], table.values[:, 4:41]], axis=1
-        )
         if table.shape[1] == 43:
             self.features.append("difficulty_level")
             self.difficulty = table.values[:, 42]
+
+        discrete_col = [1, 2, 3, 6, 11, 13, 14, 20, 21]
+        data = table.values[:, [i for i in range(41) if i not in discrete_col]].astype(np.float32)
+        if normalize is not None:
+            data = utils.normalize(data, method='z-score')
 
         # Protocol Type
         self.protocol, protocols = utils.label_encoding(table.values[:, 1])
@@ -79,6 +78,10 @@ class KDD(BaseDataset):
         # Flag
         self.flag, flags = utils.label_encoding(table.values[:, 3])
         data = np.concatenate([data, flags], axis=1)
+        # Other discrete features
+        data = np.concatenate([data, table.values[:, discrete_col[3:]]], axis=1)
+        data = data.astype(np.float32)
+
         # GT
         original_gts = np.vectorize(lambda s: s.strip(". "))(table.values[:, 41])
         ordered_set = list(OrderedDict.fromkeys(original_gts).keys())
@@ -89,5 +92,3 @@ class KDD(BaseDataset):
 
         super(KDD, self).__init__(data.astype(np.float32), gts)
         self.split(is_training, is_shuffle)
-        if normalize is not None:
-            self.normalize(normalize)

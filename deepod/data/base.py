@@ -46,18 +46,3 @@ class BaseDataset(Dataset):
             else:
                 self.data = self.data[split_idx:]
                 self.gts = self.gts[split_idx:]
-
-    def normalize(self, method='scale'):
-        if method == 'min-max':
-            minmax_scaler = MinMaxScaler()
-            minmax_scaler.fit(self.data)
-            self.data = minmax_scaler.transform(self.data)
-        elif method == 'z-score':
-            mus = np.mean(self.data, axis=0)
-            sds = np.std(self.data, axis=0)
-            sds[sds == 0] = 1
-            self.data = np.array([(xx - mus) / sds for xx in self.data])
-        elif method == 'scale':
-            self.data /= 255.
-        else:
-            raise NotImplementedError
